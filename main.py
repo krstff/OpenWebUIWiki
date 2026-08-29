@@ -75,24 +75,41 @@ def search_kiwix(req: KiwixSearchRequest):
     if not target and len(available) == 1:
         target = available[0]
     elif not target and available:
-        return KiwixSearchResponse(
-            query=req.query,
-            zim_file="(none)",
-            match_count=0,
-            articles=[{
-                "path": "_hint_",
-                "content": (
-                    f"Multiple ZIMs available. Specify 'zim_file'. Options: "
-                    f"{', '.join(os.path.basename(z) for z in available)}"
-                ),
-            }],
-        )
+        # Auto-select: prefer English ZIM, fall back to first available
+        en_zims = [z for z in available if "wikipedia_en" in os.path.basename(z).lower()]
+        target = en_zims[0] if en_zims else available[0]  # default to English or first
     elif not target:
         return KiwixSearchResponse(
             query=req.query, zim_file="(none)", match_count=0, articles=[]
         )
 
     result = search_and_collect(target, req.query)
+
+    # If no matches, give the LLM actionable feedback
+    if result["match_count"] == 0 and not result["articles"]:
+        try:
+            from libzim.reader import Archive
+            from pathlib import Path
+            archive = Archive(Path(target))
+            lang_code = archive.get_metadata("Language")
+            lang_str = (
+                lang_code.decode("utf-8", errors="replace")
+                if isinstance(lang_code, bytes)
+                else str(lang_code)
+            )
+        except Exception:
+            lang_str = "unknown"
+
+        result["articles"] = [{
+            "path": "_no_results_",
+            "content": (
+                f"No results found for query '{req.query}' in this ZIM archive "
+                f"(language: {lang_str}). The archive may be in a different language. "
+                f"Try rephrasing the query in that language, or check /zims for "
+                f"available archives matching your query language."
+            ),
+        }]
+
     return KiwixSearchResponse(**result)
 
 

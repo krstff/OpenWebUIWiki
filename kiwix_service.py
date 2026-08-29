@@ -1,9 +1,13 @@
 """Kiwix ZIM archive search service."""
 
+import logging
 import os
 from glob import glob
 from pathlib import Path
 from typing import List, Tuple
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 from libzim.reader import Archive
 from libzim.search import Query, Searcher
@@ -40,8 +44,10 @@ def kiwix_search(zim_file_path: str, search_string: str) -> Tuple[int, List[str]
         return count, paths
 
     except FileNotFoundError:
+        logger.error("ZIM file not found: %s", zim_file_path)
         return 0, []
-    except Exception:
+    except Exception as e:
+        logger.error("Search failed for '%s' in %s: %s", search_string, zim_file_path, e)
         return 0, []
 
 
@@ -58,6 +64,7 @@ def kiwix_read(zim_file_path: str, article_path: str) -> str:
         return text.strip()
 
     except Exception as e:
+        logger.error("Read failed for '%s' in %s: %s", article_path, zim_file_path, e)
         return f"[Error reading article '{article_path}']: {e}"
 
 
