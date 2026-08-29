@@ -9,3 +9,8 @@ services:
     environment:
       ZIM_DIR: /zim
     restart: unless-stopped
+
+networks:
+  default:
+    name: ai_stack
+    driver: bridge
