@@ -1,7 +1,11 @@
 """FastAPI server exposing Kiwix ZIM search as OpenAPI tools for OpenWebUI."""
 
+import logging
 import os
 from typing import Optional
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,6 +44,8 @@ app.add_middleware(
 
 
 class KiwixSearchRequest(BaseModel):
+    model_config = {"extra": "ignore"}  # silently accept extra params like 'count' from OpenWebUI
+
     query: str = "Your question or search terms"
     zim_file: Optional[str] = None
 
@@ -69,7 +75,9 @@ def get_zims():
 @app.post("/search", response_model=KiwixSearchResponse, tags=["rag"])
 def search_kiwix(req: KiwixSearchRequest):
     """Full-text search a ZIM archive and return article content."""
+    logger.info("Search request: query=%r zim_file=%r", req.query, req.zim_file)
     available = find_zim_files()
+    logger.info("Found %d ZIM files", len(available))
 
     target = req.zim_file
     if not target and len(available) == 1:
