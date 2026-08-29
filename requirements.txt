@@ -1,0 +1,4 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+libzim>=3.5
+strip-tags>=0.6

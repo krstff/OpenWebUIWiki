@@ -1,0 +1,11 @@
+services:
+  kiwix-rag:
+    build: .
+    container_name: kiwix-rag
+    ports:
+      - "${RAG_PORT:-8100}:8100"
+    volumes:
+      - "${ZIM_HOST_DIR:-./zims}:/zim:ro"
+    environment:
+      ZIM_DIR: /zim
+    restart: unless-stopped
