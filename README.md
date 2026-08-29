@@ -2,6 +2,8 @@
 
 Search offline ZIM archives (Wikipedia, DevDocs, etc.) and serve results as an OpenAPI tool for OpenWebUI.
 
+Wrapper for https://github.com/mozanunal/llm-tools-kiwix for OpenWebUI.
+
 ## Quick Start
 
 ```bash
